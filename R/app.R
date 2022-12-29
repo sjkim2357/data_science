@@ -1,4 +1,5 @@
-#Brush, DT, tabPanel
+# See: https://sjkim2357.shinyapps.io/project4/
+# Brush, DT, tabPanel
 
 library(shiny)
 library(DT)
@@ -48,4 +49,3 @@ ui = navbarPage(theme = shinytheme("sandstone"), title = h4(strong("Mall custome
 )
 
 shinyApp(ui = ui, server = server)
-
