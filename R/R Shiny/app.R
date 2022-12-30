@@ -1,3 +1,5 @@
+# See: https://sjkim2357.shinyapps.io/Mall_customer_analysis_project/
+
 library(shiny)
 library(DT)
 library(ggplot2)
