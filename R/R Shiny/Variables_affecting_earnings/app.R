@@ -1,3 +1,4 @@
+# See: https://sjkim2357.shinyapps.io/Variables_affecting_earnings/
 library(ggplot2)
 library(shiny)
 library(shinydashboard)
