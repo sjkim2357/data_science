@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta name="robots" content="noindex">
+		<meta name="googlebot" content="noindex">
+		<link rel="stylesheet" type="text/css" href="styles.css">
+		
+				<!-- Global site tag (gtag.js) - Google Analytics -->
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-BQ3PXGMPZR"></script>
+		<script>
+		window.dataLayer = window.dataLayer || [];
+		function gtag(){dataLayer.push(arguments);}
+		gtag('js', new Date());
+
+		gtag('config', 'G-BQ3PXGMPZR');
+		</script>
+
+		<script>
+		let projectName;
+		let subjectNum;
+		let testerNum;
+		let subjectList;
+		//	let testerList;
+		let testerInputResult=[];
+		let testerCount = 1;
+		//let subjectcomb = [];
+		let resultProcess = [];
+		let resultPermutation;
+		let testerResult = [];
+		let testerResultSum = [];
+		let resultScreenOut ;
+		let resultScreen=[];
+		const average = arr => arr.reduce((p, c) => p + c, 0) / arr.length;
+
+		var arr = {	
+			max: function(array) {
+				return Math.max.apply(null, array);
+			},
+			
+			min: function(array) {
+				return Math.min.apply(null, array);
+			},
+			
+			range: function(array) {
+				return arr.max(array) - arr.min(array);
+			},
+			
+			midrange: function(array) {
+				return arr.range(array) / 2;
+			},
+
+			sum: function(array) {
+				var num = 0;
+				for (var i = 0, l = array.length; i < l; i++) num += array[i];
+				return num;
+			},
+			
+			mean: function(array) {
+				return arr.sum(array) / array.length;
+			},
+			
+			median: function(array) {
+				array.sort(function(a, b) {
+					return a - b;
+				});
+				var mid = array.length / 2;
+				return mid % 1 ? array[mid - 0.5] : (array[mid - 1] + array[mid]) / 2;
+			},
+			
+			modes: function(array) {
+				if (!array.length) return [];
+				var modeMap = {},
+					maxCount = 0,
+					modes = [];
+
+				array.forEach(function(val) {
+					if (!modeMap[val]) modeMap[val] = 1;
+					else modeMap[val]++;
+
+					if (modeMap[val] > maxCount) {
+						modes = [val];
+						maxCount = modeMap[val];
+					}
+					else if (modeMap[val] === maxCount) {
+						modes.push(val);
+						maxCount = modeMap[val];
+					}
+				});
+				return modes;
+			},
+			
+			variance: function(array) {
+				var mean = arr.mean(array);
+				return (arr.sum(array.map(function(num) {
+					return Math.pow(num - mean, 2);
+				}))) / (array.length - 1);
+			},
+			
+			standardDeviation: function(array) {
+				return Math.sqrt(arr.variance(array));
+			},
+			
+			meanAbsoluteDeviation: function(array) {
+				var mean = arr.mean(array);
+				return arr.mean(array.map(function(num) {
+					return Math.abs(num - mean);
+				}));
+			},
+			
+			zScores: function(array) {
+				var mean = arr.mean(array);
+				var standardDeviation = arr.standardDeviation(array);
+				return array.map(function(num) {
+					return (num - mean) / standardDeviation;
+				});
+			},
+			inconsistency: function(array){
+				return Math.sqrt(arr.mean(array.map(function(num){
+					return Math.pow(num, 2);
+				})))
+			}
+		};
+
+		const getPermutations= function (arr, selectNumber) {
+			const results = [];
+			if (selectNumber === 1) return arr.map((value) => [value]); // 1개씩 택할 때, 바로 모든 배열의 원소 return
+
+			arr.forEach((fixed, index, origin) => {
+				const rest = [...origin.slice(0, index), ...origin.slice(index+1)] // 해당하는 fixed를 제외한 나머지 배열 
+				const permutations = getPermutations(rest, selectNumber - 1); // 나머지에 대해 순열을 구한다.
+				const attached = permutations.map((permutation) => [fixed, ...permutation]); // 돌아온 순열에 대해 떼 놓은(fixed) 값 붙이기
+				results.push(...attached); // 배열 spread syntax 로 모두다 push
+			});
+
+			return results; // 결과 담긴 results return
+			};
+
+
+		function SubjectInput() {
+        
+			let _subjectInput="";
+			testerNum = document.getElementById('testerNum').value ;
+			subjectNum = document.getElementById('subjectNum').value;
+			projectName = document.getElementById('projectName').value;
+			document.getElementById('step1').style.visibility="hidden";
+
+			//document.getElementById('result').innerHTML = `결과값 : subjectNum = ${subjectNum} testerNum = ${testerNum}`;
+
+				for (let i=0; i<subjectNum ; i++){
+
+					
+					_subjectInput = _subjectInput + `<p>Item ${i+1} (Default:${String.fromCharCode([65+i])}) <input type="text" id="subjectNameInput${i}" value="${String.fromCharCode([65+i])}"> </p>`;	
+
+					 
+				}
+				_subjectInput = _subjectInput + `<br><button id="step2" onclick="TestProcess()"> Start comparing </button>`;
+				document.getElementById('subjectNameInput').innerHTML = _subjectInput;
+				
+				
+		}
+		function SubjectList(){
+			subjectList=[];
+			for(let i=0; i<subjectNum ; i++){
+				subjectList.push(document.getElementById('subjectNameInput'+i).value);
+				
+			}
+			
+			resultPermutation = getPermutations(subjectList, subjectList.length);
+		}
+
+		function TestProcess(){
+			
+			SubjectList()
+			document.getElementById('step2').style.visibility="hidden";
+			
+			//for(let i=0; i<testerNum ; i++ ){
+				let _testerInput=[];
+				
+				TesterInput(_testerInput, testerCount);
+			//}
+
+			
+		}
+
+		function TesterInput(_testerInput, _ntester) {
+			
+				if (testerCount>testerNum){
+					return TestProcessEnd();
+				}else{
+					_testerInput = _testerInput + `<form id="form"> <p>Person ${_ntester} (Default: Person ${_ntester}) <input type="text" id="testerNameInput${_ntester}" value="Person ${_ntester}"> </p>`
+					let k =0;
+					
+						for (let i=0; i<subjectList.length ; i++){
+						
+							for(let j=i+1; j<subjectList.length ;j++ ){
+							k++;
+							_testerInput = _testerInput + 
+							`<div>${subjectList[i]}
+								<span id="input2${k+1}">50</span>
+								<input id="${_ntester}testerInput${k+1}" type="range" min="0" max="100" step="1" value="50" oninput="document.getElementById('input${k+1}').innerHTML=100-this.value; document.getElementById('input2${k+1}').innerHTML=this.value;" style="width: 50%;">
+								<span id="input${k+1}">50</span> ${subjectList[j]}</div> `;	
+							
+								
+
+							}
+						}
+					_testerInput = _testerInput + ` </form><br><button onclick="TesterInputProcess(); TestProcess();"> Next </button>`;	
+					document.getElementById('testerInput').innerHTML = _testerInput;
+					testerCount++;
+				}
+		}
+
+		function TesterInputProcess(){
+			console.log("도달");
+			testerInputResult.push(document.getElementById("form"));
+			
+			
+		}
+
+
+
+		function TestProcessEnd(){
+			testerCount=1;
+			console.log("끝")
+			document.getElementById('testerInput').innerHTML = `Result`;
+			resultScreenOut = `<h3 class="mt-4" style="width: 50%;"><center> ${projectName}</center></h3> <table class="dataTable-table" style="width: 50%;" >  <Tr> <th> Name </th>	`;
+			
+			for (z=0; z<subjectList.length ; z++){
+				resultScreenOut += `<th>${subjectList[z]}</th>`;
+			}
+				resultScreenOut += `<th> Inconsistency </th> </tr>`;			
+			for (k=0; k<testerNum ; k++){
+				resultProcess.push({});
+				let l=1
+				for (let i=0; i<subjectList.length ; i++){
+						
+					for(let j=i+1; j<subjectList.length ;j++ ){
+											
+
+						//resultProcess.push([testerInputResult[k][0].value, subjectList[i]+subjectList[j], Number(testerInputResult[k][1].value)]);
+						//resultProcess.push([testerInputResult[k][0].value, subjectList[j]+subjectList[i], 100-Number(testerInputResult[k][1].value)]);
+						
+						
+						resultProcess[k][subjectList[i]+subjectList[j]]=100-Number(testerInputResult[k][l].value);
+						resultProcess[k][subjectList[j]+subjectList[i]]=Number(testerInputResult[k][l].value);
+						l++;
+
+					}
+				}
+			}
+			
+			
+			let _tempCal =[];
+			let _tempNN;
+			let _tempAA;
+			let _tempXX;
+			let _temp100 ;
+			
+			for (t=0;t<testerNum;t++) {
+
+				let _temp200 =[];
+				testerResult = [];
+				_tempXX = [];
+				resultScreen.push({});
+
+				for(i=0;i<resultPermutation.length;i++){
+					
+					_temp100 =[];
+					_tempCal.push({});
+					testerResult.push({});
+					
+					
+					for(j=0; j<resultPermutation[i].length;j++){
+						for(k=0; k<resultPermutation[i].length ;k++) {
+
+							if(resultPermutation[i][j]!==resultPermutation[i][k]){
+								
+								_tempCal[i][resultPermutation[i][j]+resultPermutation[i][k]]=(resultProcess[t][resultPermutation[i][j]+resultPermutation[i][k]]/resultProcess[t][resultPermutation[i][k]+resultPermutation[i][j]]);
+						
+							}else
+							{
+								_tempCal[i][resultPermutation[i][j]+resultPermutation[i][k]]=1.0;
+							}
+
+						}
+
+					}
+
+
+					for(j=0; j<resultPermutation[i].length-1;j++){
+						_tempNN = 0;
+						for(m=0; m<resultPermutation[i].length;m++){
+							
+							_tempNN += (_tempCal[i][resultPermutation[i][m]+resultPermutation[i][j]] / _tempCal[i][resultPermutation[i][m]+resultPermutation[i][j+1]]);
+
+						}
+						_temp100.push((_tempNN/resultPermutation[i].length));
+						
+					}
+					
+					_tempNN = 0;
+					
+					let _tempsum=[];
+
+					for(j=(resultPermutation[i].length-1); j>0;j--){
+						
+						if(j === resultPermutation[i].length-1){
+							_tempNN = (_temp100[j-1] * 1.0);
+							_tempsum.unshift(_tempNN);
+						}else{
+							_tempNN = (_temp100[j-1] * _tempNN) ;
+							_tempsum.unshift(_tempNN);
+						}
+					}
+
+					_tempXX.push(_tempsum.reduce((stack, el) => {return stack +el;},0) + 1.0);
+
+					_tempNN = 0;
+					for (j=resultPermutation[i].length; j>0;j--) {
+																	
+							if(j === resultPermutation[i].length){
+								testerResult[i][resultPermutation[i][j-1]] = (1.0 / _tempXX[i]) ;
+								
+							}
+							else{
+								testerResult[i][resultPermutation[i][j-1]]= (_tempsum[j-1] / _tempXX[i]) ;
+								
+							}
+
+						
+					}
+
+								
+				}
+
+								
+				testerResultSum.push(testerResult);
+				let _temparr2 = [];
+
+				for(i=0;i<subjectList.length;i++){
+					let _sum = 0;
+					let _temparr =[];
+					
+					for(j=0; j<resultPermutation.length;j++){
+
+						_sum += testerResultSum[t][j][subjectList[i]];
+						_temparr.push(Number(testerResultSum[t][j][subjectList[i]].toFixed(4)));
+												
+					}
+					console.log(_temparr);
+					resultScreen[t]["mean"+subjectList[i]] = arr.mean(_temparr);
+					resultScreen[t]["std"+subjectList[i]] = arr.standardDeviation(_temparr);
+					resultScreen[t]["variance"+subjectList[i]] = arr.variance(_temparr);
+					resultScreen[t][subjectList[i]]=(Number((_sum/resultPermutation.length).toFixed(4)));
+					
+					_temparr2.push(arr.standardDeviation(_temparr));
+				}
+				resultScreen[t]["inconsistency"] = (arr.inconsistency(_temparr2)).toFixed(4);
+
+				
+				
+
+				resultScreenOut += `<tr> <td> ${testerInputResult[t][0].value} </td> `;
+				for(i=0;i<subjectList.length;i++){
+
+					resultScreenOut += `<td> ${resultScreen[t][subjectList[i]]} </td>`; // 개별 아이템 값의 평가자 평균 값
+
+				}
+				resultScreenOut += `<td> ${resultScreen[t]["inconsistency"]}</td></tr>`;
+
+				
+				
+
+			}
+
+			let _temparr3 =[];
+			for (i=0;i<subjectList.length;i++){
+				_temparr3.push([]);
+				for (t=0;t<testerNum;t++) {
+					_temparr3[i][t]=(resultScreen[t][subjectList[i]]);
+				}
+			}
+
+			resultScreenOut +=` <tr> <td> Mean </td>`
+			
+			let _temparr4 =[];
+			for (i=0;i<subjectList.length;i++){
+				resultScreenOut +=`<td> ${(arr.mean(_temparr3[i])).toFixed(4)} </td>`;
+				_temparr4.push(arr.standardDeviation(_temparr3[i]));
+			}
+
+			resultScreenOut +=` <td> ${((arr.inconsistency(_temparr4)).toFixed(4))} </td>`;
+
+			resultScreenOut +=` </tr> <tr> <td> Min </td>`;
+			
+			for (i=0;i<subjectList.length;i++){
+				resultScreenOut +=`<td> ${(arr.min(_temparr3[i])).toFixed(4)} </td>`;
+			}
+			resultScreenOut +=`<td></td>`;
+			resultScreenOut +=` </tr> <tr> <td> Max </td>`;
+			
+			for (i=0;i<subjectList.length;i++){
+				resultScreenOut +=`<td> ${(arr.max(_temparr3[i])).toFixed(4)} </td>`;
+			}
+			resultScreenOut +=`<td></td>`;
+
+			resultScreenOut +=` </tr> <tr> <td> Std Dev </td>`;
+			
+			for (i=0;i<subjectList.length;i++){
+				resultScreenOut +=`<td> ${(arr.standardDeviation(_temparr3[i])).toFixed(4)} </td>`;
+			}
+			resultScreenOut +=`<td></td>`;
+
+			resultScreenOut +=` </tr> </table>`;
+		
+
+			resultScreenOut += `<br><button onclick="TesterResultOut();"> Show indivisual sheets </button>`;
+			document.getElementById('resultScreenOut').innerHTML = resultScreenOut; //resultScreenOut;
+
+			console.log(testerInputResult);
+			console.log(_tempCal);
+			console.log(resultPermutation);
+			console.log(resultPermutation[0].length);
+			console.log(subjectList);
+			console.log(resultProcess);
+			console.log(resultProcess.length);
+			console.log(_temp100);
+			console.log(_tempXX);
+			console.log(testerResult);
+			console.log(testerResultSum);
+			console.log(resultScreen);
+			console.log(subjectList.length);
+
+		}
+	
+		function TesterResultOut(){
+			resultScreenOut = "";
+
+			for (i=0;i<testerNum;i++) {
+				resultScreenOut += `<p>${testerInputResult[i][0].value} Assessment</p>`;
+
+				for(j=0; j<testerResultSum[i].length; j++){
+					
+					resultScreenOut +=`<p> ${resultPermutation[j].toString()}  `;
+						
+					for(k=0; k<subjectList.length ; k++){
+
+						resultScreenOut += `  ,  ${testerResultSum[i][j][subjectList[k]].toFixed(4)}`;
+						console.log(testerResultSum[i][j][subjectList[k]]);
+
+					}
+					resultScreenOut +="</p>";
+
+				}
+				resultScreenOut += "</br>";
+			}
+
+			document.getElementById('testerScreenOut').innerHTML = resultScreenOut; 
+		}
+
+				
+		
+
+		</script>
+		
+	</head>
+	<body style="font-size:1.2em;">
+		<div class="container-fluid px-4">
+			<p>
+				<h2 class="mt-4">Project Name</h2>
+			</p>
+				<div class="input-group breadcrumb mb-4">
+					<input type="text" id="projectName" value="ABC Project">  
+				</div>
+			<div>
+				<table class="breadcrumb mb-4">
+					<tr>
+						<td>Number of items to compare</td>
+						<td>
+							<input id="subjectNum" type="range" min="2" max="7" step="1" value="1" oninput="document.getElementById('subShow').innerHTML=this.value;">
+							<span id="subShow">2</span>
+						</td>
+					</tr>
+			
+					<tr>
+						<td>Number of people doing comparison</td>
+						<td>
+							<input id="testerNum" type="range" min="1" max="30" step="1" value="1" oninput="document.getElementById('tesShow').innerHTML=this.value;">
+							<span id="tesShow">1</span>
+						</td>
+						
+					</tr>
+					
+				</table>
+                <button id = "step1" onclick="SubjectInput()">Create a project</button>
+			
+			</div>
+
+            <div id='result'> </div>
+			<div id='subjectNameInput'></div>
+			<div id='testerInput'></div>
+			<div id='resultScreenOut'></div>
+			<div id='testerScreenOut'></div>
+			<!--<div id='testProcess'></div>-->
+			
+			<div style="font-size:0.5em;">
+
+			<p>
+				<br>
+				<br>			
+
+				This web-based PCM, designed by <a href="https://www.linkedin.com/in/sungjin-kim-784805104" target="_blank"> S. Kim(Linkedin)</a> and S. Min, is a modernized version of the original PCM software written by Bruce J. Bailey <a href="https://pdxscholar.library.pdx.edu/etm_studentprojects/569/" target="_blank">(LINK)</a>
+			</p>
+		
+			<p>
+				The mathematics for the software was devised by Dundar F. Kocaolgu, for the measurement of subjective values via constant-sum comparison, who developed a Hierarchical Decision Model <a href="https://ieeexplore.ieee.org/document/6448602" target="_blank">(LINK)</a>
+				
+			</p>
+			
+			</div>
+		</div>
+	</body>
+</html>
