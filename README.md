@@ -6,4 +6,4 @@
 
 ## _Objective_
 - Some projects are for analysis and research, and others are for educational purposes. 
-- In learning a new language, __'Aim for progress, not perfection'__. Enjoy the journey. 
+- In learning a new language, __'aim for progress, not perfection'__. Enjoy the journey. 
