@@ -3,7 +3,7 @@
 ## _Introduction_
 - This repository includes various data science projects written in Python, R, and CSS. 
 - All datasets for the projects are in the dataset folder. 
-- Some projects exist in their published format, e.g., academic journals, R Shiny apps, and web apps. 
+- Some projects exist in their published formats, e.g., academic journals, R Shiny apps, and web apps. 
 
 ## _Objective_
 - Some projects are for analysis and research, and others are for educational purposes. 
