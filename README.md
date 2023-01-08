@@ -6,5 +6,5 @@
 - Some projects exist in their published formats, e.g., academic journals, R Shiny apps, and web apps. 
 
 ## _Objective_
-- Some projects are for analysis and research, and others are for educational purposes. 
+- Some are for analysis and research, and others are for learning purposes. 
 - In learning a new language, __'aim for progress, not perfection'__. Enjoy the journey. 
