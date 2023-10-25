@@ -1,4 +1,4 @@
-# Sung's data science project repository
+# Sung's data science and analytics repository
 
 ## _Introduction_
 - This repository includes various data science projects written in Python, R, and CSS. 
